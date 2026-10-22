@@ -25,14 +25,22 @@ public:
 	Font& GetFont() { return font; }
 
 	int GetScore() { return score; }
-	void SetScore(int newValue) { score = newValue; }
+	void SetScore(int newValue) { score = newValue < minScore ? minScore : (newValue > maxScore ? maxScore : newValue); }
+
+	int GetHighScore() { return highScore; }
+	bool HasWon() { return gameWon; }
+	void EndGame(bool won);
+	void ResetGameOutcome() { gameWon = false; }
 
 	int GetSeconds() { return seconds; }
 	void SetSeconds(int newValue) { seconds = newValue; }
 
-	void IncreaseScore(int newValue) { score += newValue; }
-	void DecreaseScore(int newValue) { score -= newValue; }
+	int GetLifes() { return lifes; }
+	void DecreaseLife() { if (lifes > 0) { lifes--; DecreaseScore(50); } }
+	void ResetLifes() { lifes = 3; }
 
+	void IncreaseScore(int newValue) { SetScore(score + newValue); }
+	void DecreaseScore(int newValue) { SetScore(score - newValue); }
 
 	static GameManager& GetGameManager();
 
@@ -52,8 +60,17 @@ private:
 	int transFromScreen = -1;
 	int transToScreen = -1;
 
+	int lifes = 3;
 	int score = 0;
+	int highScore = 0;
 	int seconds = 0;
+	bool gameWon = false;
+
+	static constexpr int minScore = -150;
+	static constexpr int maxScore = 700;
+
+	void LoadHighScore();
+	void SaveHighScore();
 
 private:
 

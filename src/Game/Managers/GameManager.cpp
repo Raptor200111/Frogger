@@ -12,10 +12,11 @@
 #include <stdio.h>              // Standard input-output C library
 #include <stdlib.h>             // Memory management functions: malloc(), free()
 #include <string.h>             // String manipulation functions: strrchr(), strcmp()
+#include <fstream>
+#include <string>
 
 //---------------------------------------------------------------
 GameManager* GameManager::GameMngr = nullptr;
-
 
 GameManager& GameManager::GetGameManager()
 {
@@ -35,11 +36,57 @@ void GameManager::InitGame()
 
     // Load global data (assets that must be available in all screens, i.e. font)
     font = LoadFont("resources/Font/PacManFont.ttf");
+    LoadHighScore();
 
     // Setup and init first screen
     ScreenState = &ScreenLogoState::getInstance();
     ScreenState->InitScreen();
      
+}
+
+void GameManager::EndGame(bool won)
+{
+    gameWon = won;
+    if (score > highScore)
+    {
+        highScore = score;
+        SaveHighScore();
+    }
+}
+
+void GameManager::LoadHighScore()
+{
+    highScore = 0;
+    const std::string highScorePath = std::string(GetApplicationDirectory()) + "highscore.json";
+    std::ifstream file(highScorePath);
+    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+    const std::string key = "\"highscore\"";
+    const size_t keyPosition = contents.find(key);
+    if (keyPosition == std::string::npos)
+        return;
+
+    const size_t separatorPosition = contents.find(':', keyPosition + key.size());
+    if (separatorPosition == std::string::npos)
+        return;
+
+    try
+    {
+        const int loadedScore = std::stoi(contents.substr(separatorPosition + 1));
+        if (loadedScore >= 0)
+            highScore = loadedScore;
+    }
+    catch (const std::exception&)
+    {
+        highScore = 0;
+    }
+}
+
+void GameManager::SaveHighScore()
+{
+    const std::string highScorePath = std::string(GetApplicationDirectory()) + "highscore.json";
+    std::ofstream file(highScorePath, std::ios::trunc);
+    if (file)
+        file << "{\"highscore\": " << highScore << "}";
 }
 //-------------------------------------------------------
 void GameManager::UpdateFrame(float deltaTime)
@@ -236,6 +283,7 @@ void GameManager::ClearGameVar()
 {
     score = 0;
     seconds = 0;
+    lifes = 3;
     
 
 }

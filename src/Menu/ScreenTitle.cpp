@@ -15,16 +15,40 @@ void ScreenTitleState::InitScreen(void)
 	finishScreen = 0;
 	TraceLog(LOG_INFO, "ScreenTitleState::InitScreen");
 
-	// Use this to access to the Game instance
-	GameManager& GameInst = GameManager::GetGameManager();
+	titleLogo = LoadTexture("resources/Menu/MainLogo.png");
+	logoLoaded = true;
 
-
+	entranceDone = false;
+	animOffsetY = -(float)(kLogoFinalY + titleLogo.height);
+	blinkTimer = 0.0f;
+	pressVisible = true;
 }
 
 void ScreenTitleState::UpdateScreen(float deltaTime)
 {
-	GameManager& GameInst = GameManager::GetGameManager();
+	if (!entranceDone)
+	{
+		const float startOffset = -(float)(kLogoFinalY + titleLogo.height);
+		const float dropSpeed = -startOffset / kDropDuration; // positive: moves toward 0
 
+		animOffsetY += dropSpeed * deltaTime;
+		if (animOffsetY >= 0.0f)
+		{
+			animOffsetY = 0.0f;
+			entranceDone = true;
+			blinkTimer = 0.0f;
+			pressVisible = true;
+		}
+		return;
+	}
+
+	blinkTimer += deltaTime;
+	const float phaseDuration = pressVisible ? kBlinkOn : kBlinkOff;
+	if (blinkTimer >= phaseDuration)
+	{
+		blinkTimer -= phaseDuration;
+		pressVisible = !pressVisible;
+	}
 
 	if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
 	{
@@ -41,21 +65,30 @@ void ScreenTitleState::DrawScreen(void)
 {
 	DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLACK);
 
-	GameManager& GameInst = GameManager::GetGameManager();
+	const int offsetY = (int)animOffsetY;
 
+	if (logoLoaded)
+	{
+		int x = (GetScreenWidth() / 2) - (titleLogo.width / 2);
+		DrawTexture(titleLogo, x, kLogoFinalY + offsetY, WHITE);
+	}
 
+	const char* author = "by Alvar Dalda";
+	DrawText(author, (GetScreenWidth() / 2) - (MeasureText(author, 20) / 2), kAuthorFinalY + offsetY, 20, WHITE);
 
-	DrawText("by Alvar Dalda", (GetScreenWidth() / 2) - (MeasureText("by Alvar Dalda", 20) / 2), 450, 20, WHITE);
-	DrawText("Press Enter for Playing", (GetScreenWidth() / 2) - (MeasureText("Press Enter for Playing", 25) / 2), 500, 25, WHITE);
-	DrawText("Press 'O' for Instructions", (GetScreenWidth() / 2) - (MeasureText("Press 'O' for Instructions", 25) / 2), 560, 25, WHITE);
+	const char* pressEnter = "PRESS ENTER TO PLAY";
+	if (!entranceDone || pressVisible)
+	{
+		DrawText(pressEnter, (GetScreenWidth() / 2) - (MeasureText(pressEnter, 25) / 2), kPressFinalY + offsetY, 25, WHITE);
+	}
 
-
+	const char* options = "Press 'O' for Instructions";
+	DrawText(options, (GetScreenWidth() / 2) - (MeasureText(options, 25) / 2), kOptionsFinalY + offsetY, 25, WHITE);
 }
 
 void ScreenTitleState::UnloadScreen(void)
 {
-	GameManager& GameInst = GameManager::GetGameManager();
-
+	if (logoLoaded) { UnloadTexture(titleLogo); logoLoaded = false; }
 }
 
 int ScreenTitleState::FinishScreen(void)

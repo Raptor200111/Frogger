@@ -17,11 +17,6 @@
 #include "Game/GlobalGameDefines.h"
 #include "Game/Managers/GameManager.h"
 
-extern const int screenWidth = 1280;
-extern const int screenHeight = 800;
-
-extern const int gravity = 400;
-
 //----------------------------------------------------------------------------------
 // Main entry point
 //----------------------------------------------------------------------------------

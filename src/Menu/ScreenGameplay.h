@@ -1,5 +1,12 @@
 #pragma once
 #include "StateMachineMngr.h"
+#include "../Game/Player.h"
+#include "../Game/Lane.h"
+#include "raylib.h"
+#include "Game/GlobalGameDefines.h"
+#include <string>
+#include "../Game/Managers/GameManager.h"
+
 
 class ScreenGameplayState : public StateMachineMngr
 {
@@ -28,6 +35,8 @@ private:
 	
 	void DebugOptions();
 	void DrawDebug();
+	void ResetTime();
+	void LoseLife();
 
 	int framesCounter = 0;
 	int finishScreen = 0;
@@ -36,4 +45,17 @@ private:
 	bool debug_floor = false;
 	bool debug_stairs = false;
 
+	Player* player = nullptr;
+	Lane* lanes = nullptr;
+	Sprite* floor = nullptr;
+	Sprite* wall = nullptr;
+	Sprite* life = nullptr;
+
+	const float maxTime = 20.0f;
+	float timeRemaining = maxTime;
+
+	int wallState[GameGlobalVar::COLS] = { 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1 };
+	int wallStateCounter = 0;
+
+	void CheckCollisions();
 };

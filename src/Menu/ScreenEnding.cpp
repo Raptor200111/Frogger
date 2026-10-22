@@ -39,13 +39,17 @@ void ScreenEndingState::DrawScreen(void)
 
 	Font font = GameInst.GetFont();
 
-	// Write this in case of win
-	DrawTextEx(font, "GAME OVER", Vector2{ (GetScreenWidth() / 2.f) - 150, (GetScreenHeight() / 2.f) -150 }, font.baseSize * 2.0f, 1, RED);
+	const char* result = GameInst.HasWon() ? "WIN" : "GAME OVER";
+	const int resultWidth = MeasureText(result, 50);
+	DrawText(result, (GetScreenWidth() - resultWidth) / 2.f, (GetScreenHeight() / 2.f) - 150 , 50, GameInst.HasWon() ? GREEN : RED);
 
-	DrawTextEx(font, "YOU WIN!", Vector2{ (GetScreenWidth() / 2.f) - 150, (GetScreenHeight() / 2.f) - 150 }, font.baseSize * 2.0f, 1, WHITE);
+	const std::string scoreText = "SCORE: " + std::to_string(GameInst.GetScore());
+	const std::string highScoreText = "HIGHSCORE: " + std::to_string(GameInst.GetHighScore());
+	DrawText(scoreText.c_str(), (GetScreenWidth() - MeasureText(scoreText.c_str(), 25)) / 2, (GetScreenHeight() / 2) - 50, 25, WHITE);
+	DrawText(highScoreText.c_str(), (GetScreenWidth() - MeasureText(highScoreText.c_str(), 25)) / 2, (GetScreenHeight() / 2), 25, WHITE);
 
 	DrawText("Press Enter for Playing", (GetScreenWidth() / 2.f) - (MeasureText("Press Enter for Playing", 25) / 2), (GetScreenHeight() / 2.f) + 50, 25, WHITE);
-	DrawText("Press 'O' for Options", (GetScreenWidth() / 2.f) - (MeasureText("Press 'I' for Instructions", 25) / 2), (GetScreenHeight() / 2.f) + 100, 25, WHITE);
+	DrawText("Press 'O' for Options", (GetScreenWidth() / 2.f) - (MeasureText("Press 'O' for Options", 25) / 2), (GetScreenHeight() / 2.f) + 100, 25, WHITE);
 
 }
 
