@@ -58,4 +58,5 @@ private:
 	int wallStateCounter = 0;
 
 	void CheckCollisions();
+	int GetLaneIndexForRow(int row) const;
 };

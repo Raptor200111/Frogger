@@ -31,6 +31,8 @@ public:
 		return positions;
 	}
 	int GetEntityType() { return entityType; }
+	float GetSpeed() const { return speed; }
+	int GetDirection() const { return direction; }
 
 private:
 	int yPosition;

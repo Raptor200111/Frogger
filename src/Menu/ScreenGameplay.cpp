@@ -52,17 +52,27 @@ void ScreenGameplayState::UpdateScreen(float deltaTime)
 {
 	EvaluateInput();
 
-	//put here all the code for updating in the screen the gameplay
-
 	for (int i = 0; i < GameGlobalVar::lanesCount; i++)
 	{
 		lanes[i].Update(deltaTime);
 	}
+
+	if (player->IsOnLog())
+	{
+		player->ApplyCarry(deltaTime);
+		if (player->IsOutsidePlayfield())
+		{
+			LoseLife();
+			return;
+		}
+	}
+
 	player->Update(deltaTime);
 	timeRemaining -= deltaTime;
 	if (timeRemaining <= 0.0f)
 	{
 		LoseLife();
+		return;
 	}
 	CheckCollisions();
 }
@@ -203,18 +213,34 @@ void ScreenGameplayState::LoseLife()
 	}
 }
 
+int ScreenGameplayState::GetLaneIndexForRow(int row) const
+{
+	if (row >= 1 && row <= 5)
+		return row - 1;
+	if (row >= 7 && row <= 11)
+		return row - 2;
+	return -1;
+}
+
 void ScreenGameplayState::CheckCollisions()
 {
 	auto gridPosition = player->gridPosition;
 	if (gridPosition.y == 0)
 	{
-		if (wallState[(int)gridPosition.x] == 0 || wallState[(int)gridPosition.x] == 2)
+		player->ClearLogCarry();
+		int col = (int)gridPosition.x;
+		if (col < 0 || col >= GameGlobalVar::COLS)
+		{
+			LoseLife();
+			return;
+		}
+		if (wallState[col] == 0 || wallState[col] == 2)
 		{
 			player->ResetLastGridPosition();
 		}
-		else if (wallState[(int)gridPosition.x] == 1)
+		else if (wallState[col] == 1)
 		{
-			wallState[(int)gridPosition.x] = 2; // Mark as reached]
+			wallState[col] = 2; // Mark as reached
 			player->ResetPlayerPosition();
 			GameManager::GetGameManager().IncreaseScore(100);
 			ResetTime();
@@ -226,35 +252,54 @@ void ScreenGameplayState::CheckCollisions()
 		}
 		return;
 	}
-	else if (gridPosition.y > 0 && gridPosition.y < 6){
-		auto activeEntitiesX = lanes[(int)gridPosition.y - 1].GetActiveEntitiesXPositions();
-		auto enityWidth = lanes[(int)gridPosition.y - 1].GetEntityWidth();
-		auto entityType = lanes[(int)gridPosition.y - 1].GetEntityType();
 
-		for (auto entityX : activeEntitiesX)
-		{
-			if (entityType == 0 && gridPosition.x * GameGlobalVar::CELL_SIZE + GameGlobalVar::screenOffsetX < entityX + enityWidth &&
-				gridPosition.x * GameGlobalVar::CELL_SIZE + GameGlobalVar::screenOffsetX + GameGlobalVar::CELL_SIZE > entityX)
-			{
-				LoseLife();
-				break;
-			}
-		}
-
+	const int laneIndex = GetLaneIndexForRow((int)gridPosition.y);
+	if (laneIndex < 0)
+	{
+		player->ClearLogCarry();
+		return;
 	}
-	else if (gridPosition.y > 6 && gridPosition.y < 12) {
-		auto activeEntitiesX = lanes[(int)gridPosition.y - 2].GetActiveEntitiesXPositions();
-		auto enityWidth = lanes[(int)gridPosition.y - 2].GetEntityWidth();
-		auto entityType = lanes[(int)gridPosition.y - 2].GetEntityType();
 
-		for (auto entityX : activeEntitiesX)
+	Lane& lane = lanes[laneIndex];
+	const auto activeEntitiesX = lane.GetActiveEntitiesXPositions();
+	const int entityWidth = lane.GetEntityWidth();
+	const int entityType = lane.GetEntityType();
+	const float playerLeft = player->position.x;
+	const float playerRight = playerLeft + GameGlobalVar::CELL_SIZE;
+
+	bool overlappingLog = false;
+	float hitLogX = 0.0f;
+
+	for (int entityX : activeEntitiesX)
+	{
+		const bool overlaps = playerLeft < entityX + entityWidth && playerRight > entityX;
+		if (!overlaps)
+			continue;
+
+		if (entityType == 0)
 		{
-			if (entityType == 0 && gridPosition.x * GameGlobalVar::CELL_SIZE + GameGlobalVar::screenOffsetX < entityX + enityWidth &&
-				gridPosition.x * GameGlobalVar::CELL_SIZE + GameGlobalVar::screenOffsetX + GameGlobalVar::CELL_SIZE > entityX)
-			{
-				LoseLife();
-				break;
-			}
+			LoseLife();
+			return;
 		}
+
+		if (entityType == 1)
+		{
+			overlappingLog = true;
+			hitLogX = (float)entityX;
+			break;
+		}
+	}
+
+	if (entityType == 1 && overlappingLog)
+	{
+		player->SetActiveLane(&lane);
+		if (!player->IsOnLog())
+			player->MountLog(hitLogX, entityWidth, lane.GetSpeed(), lane.GetDirection());
+		else
+			player->SetLogCarry(lane.GetSpeed(), lane.GetDirection());
+	}
+	else if (entityType == 1)
+	{
+		player->ClearLogCarry();
 	}
 }
