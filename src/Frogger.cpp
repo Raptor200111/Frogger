@@ -16,6 +16,7 @@
 #include "raylib.h"
 #include "Game/GlobalGameDefines.h"
 #include "Game/Managers/GameManager.h"
+#include "Game/Managers/AudioManager.h"
 
 //----------------------------------------------------------------------------------
 // Main entry point
@@ -25,6 +26,8 @@ int main(void)
     // Initialization
     //---------------------------------------------------------
     InitWindow(GameGlobalVar::screenWidth, GameGlobalVar::screenHeight, "FROGGER SIMULATOR");
+
+    AudioManager::Get().Init();
 
     GameManager & GameMngr = GameManager::GetGameManager();
     GameMngr.InitGame();
@@ -38,6 +41,8 @@ int main(void)
 
         float deltaTime = GetFrameTime();
 
+        AudioManager::Get().Update();
+
         //Update Frame
         GameMngr.UpdateFrame(deltaTime);
         
@@ -47,6 +52,7 @@ int main(void)
 
     // De-Initialization
     GameManager::GetGameManager().UnloadGame();
+    AudioManager::Get().Unload();
 
     CloseWindow();          // Close window and OpenGL context
     //--------------------------------------------------------------------------------------

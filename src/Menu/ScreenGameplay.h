@@ -42,8 +42,7 @@ private:
 	int finishScreen = 0;
 	bool mb_ReplayLevel = false;
 
-	bool debug_floor = false;
-	bool debug_stairs = false;
+	bool showDebugGrid = false;
 
 	Player* player = nullptr;
 	Lane* lanes = nullptr;

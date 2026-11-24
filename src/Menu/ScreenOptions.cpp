@@ -1,5 +1,6 @@
 #include "ScreenOptions.h"
 #include "raylib.h"
+#include "Game/Managers/AudioManager.h"
 
 
 ScreenOptionsState::ScreenOptionsState()
@@ -17,6 +18,7 @@ void ScreenOptionsState::InitScreen(void)
 {
 	framesCounter = 0;
 	finishScreen = 0;
+	AudioManager::Get().PlayMenuMusic();
 }
 
 void ScreenOptionsState::UpdateScreen(float deltaTime)

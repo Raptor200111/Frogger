@@ -32,6 +32,9 @@ private:
 	Texture2D titleLogo = { 0 };
 	bool logoLoaded = false;
 
+	Font pressFont = { 0 };
+	bool pressFontLoaded = false;
+
 	bool entranceDone = false;
 	float animOffsetY = 0.0f;
 	float blinkTimer = 0.0f;

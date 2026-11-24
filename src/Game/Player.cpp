@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Game/Managers/AudioManager.h"
 
 Player::Player()
 {
@@ -151,6 +152,7 @@ void Player::HandleInput()
 		{
 			SetGridPosition((int)gridPosition.x, (int)gridPosition.y - 1);
 			currentTextureIndex = 1; // Up texture
+			AudioManager::Get().PlayHop();
 		}
 	}
 	else if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
@@ -164,6 +166,7 @@ void Player::HandleInput()
 		{
 			SetGridPosition((int)gridPosition.x, (int)gridPosition.y + 1);
 			currentTextureIndex = 0; // Down texture
+			AudioManager::Get().PlayHop();
 		}
 	}
 	else if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
@@ -171,12 +174,16 @@ void Player::HandleInput()
 		if (onLog && activeLane != nullptr)
 		{
 			if (TryMoveOnLog(-1, *activeLane))
+			{
 				currentTextureIndex = 2;
+				AudioManager::Get().PlayHop();
+			}
 		}
 		else if (IsPositionValid({ gridPosition.x - 1, gridPosition.y }))
 		{
 			SetGridPosition((int)gridPosition.x - 1, (int)gridPosition.y);
 			currentTextureIndex = 2; // Left texture
+			AudioManager::Get().PlayHop();
 		}
 	}
 	else if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
@@ -184,12 +191,16 @@ void Player::HandleInput()
 		if (onLog && activeLane != nullptr)
 		{
 			if (TryMoveOnLog(1, *activeLane))
+			{
 				currentTextureIndex = 3;
+				AudioManager::Get().PlayHop();
+			}
 		}
 		else if (IsPositionValid({ gridPosition.x + 1, gridPosition.y }))
 		{
 			SetGridPosition((int)gridPosition.x + 1, (int)gridPosition.y);
 			currentTextureIndex = 3; // Right texture
+			AudioManager::Get().PlayHop();
 		}
 	}
 }

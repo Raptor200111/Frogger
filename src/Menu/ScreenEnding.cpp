@@ -1,5 +1,6 @@
 #include "ScreenEnding.h"
 #include "Game/Managers/GameManager.h"
+#include "Game/Managers/AudioManager.h"
 
 #include "raylib.h"
 
@@ -17,6 +18,8 @@ void ScreenEndingState::InitScreen(void)
 {
 	framesCounter = 0;
 	finishScreen = 0;
+	AudioManager::Get().StopMenuMusic();
+	AudioManager::Get().PlayGameOver();
 }
 
 void ScreenEndingState::UpdateScreen(float deltaTime)
@@ -55,9 +58,7 @@ void ScreenEndingState::DrawScreen(void)
 
 void ScreenEndingState::UnloadScreen(void)
 {
-	//Let's unload all the enemies lines
-	GameManager& GameInst = GameManager::GetGameManager();
-
+	AudioManager::Get().StopGameOver();
 }
 
 int  ScreenEndingState::FinishScreen(void)

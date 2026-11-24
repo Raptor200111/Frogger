@@ -79,8 +79,6 @@ private:
 	//------------
 
 	Font font = { 0 };
-	Music music = { 0 };
-	Sound fxCoin = { 0 };
 
 	StateMachineMngr* ScreenState;
 

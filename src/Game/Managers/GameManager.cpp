@@ -206,10 +206,6 @@ void GameManager::UnloadGame(void)
 
     // Unload global data loaded
     UnloadFont(font);
-    UnloadMusicStream(music);
-    UnloadSound(fxCoin);
-
-    CloseAudioDevice();     // Close audio context
 }
 
 

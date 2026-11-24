@@ -1,6 +1,7 @@
 #include "ScreenTitle.h"
 #include "raylib.h"
 #include "Game/Managers/GameManager.h"
+#include "Game/Managers/AudioManager.h"
 
 ScreenTitleState& ScreenTitleState::getInstance()
 {
@@ -18,10 +19,15 @@ void ScreenTitleState::InitScreen(void)
 	titleLogo = LoadTexture("resources/Menu/MainLogo.png");
 	logoLoaded = true;
 
+	pressFont = LoadFont("resources/Menu/HerculesPixelFontRegular-ovAX0.otf");
+	pressFontLoaded = true;
+
 	entranceDone = false;
 	animOffsetY = -(float)(kLogoFinalY + titleLogo.height);
 	blinkTimer = 0.0f;
 	pressVisible = true;
+
+	AudioManager::Get().PlayMenuMusic();
 }
 
 void ScreenTitleState::UpdateScreen(float deltaTime)
@@ -79,7 +85,20 @@ void ScreenTitleState::DrawScreen(void)
 	const char* pressEnter = "PRESS ENTER TO PLAY";
 	if (!entranceDone || pressVisible)
 	{
-		DrawText(pressEnter, (GetScreenWidth() / 2) - (MeasureText(pressEnter, 25) / 2), kPressFinalY + offsetY, 25, WHITE);
+		const float pressSize = 28.0f;
+		if (pressFontLoaded)
+		{
+			Vector2 pressSizeVec = MeasureTextEx(pressFont, pressEnter, pressSize, 1.0f);
+			Vector2 pressPos = {
+				(GetScreenWidth() - pressSizeVec.x) / 2.0f,
+				(float)(kPressFinalY + offsetY)
+			};
+			DrawTextEx(pressFont, pressEnter, pressPos, pressSize, 1.0f, WHITE);
+		}
+		else
+		{
+			DrawText(pressEnter, (GetScreenWidth() / 2) - (MeasureText(pressEnter, 25) / 2), kPressFinalY + offsetY, 25, WHITE);
+		}
 	}
 
 	const char* options = "Press 'O' for Instructions";
@@ -89,6 +108,7 @@ void ScreenTitleState::DrawScreen(void)
 void ScreenTitleState::UnloadScreen(void)
 {
 	if (logoLoaded) { UnloadTexture(titleLogo); logoLoaded = false; }
+	if (pressFontLoaded) { UnloadFont(pressFont); pressFontLoaded = false; }
 }
 
 int ScreenTitleState::FinishScreen(void)

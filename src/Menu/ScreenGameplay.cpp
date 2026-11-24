@@ -2,6 +2,7 @@
 #pragma once
 
 #include "ScreenGameplay.h"
+#include "Game/Managers/AudioManager.h"
 
 
 
@@ -46,6 +47,11 @@ void ScreenGameplayState::InitScreen(void)
 	wall->InitSprite( { "resources/Game/Bush.png", "resources/Game/Home.png", "resources/Game/Point.png" } );
 	life = new Sprite();
 	life->InitSprite({ "resources/Game/Life.png" });
+
+	AudioManager::Get().StopMenuMusic();
+	AudioManager::Get().LoadGameplaySfx();
+
+	showDebugGrid = false;
 }
 
 void ScreenGameplayState::UpdateScreen(float deltaTime)
@@ -83,27 +89,6 @@ void ScreenGameplayState::DrawScreen(void)
 
 	GameManager& GameInst = GameManager::GetGameManager();
 
-	//put here all the code for drawing in the screen the gameplay
-	/*
-	bool alternateColor = false;
-
-	for (int i = 0; i < GameGlobalVar::ROWS; i++)
-	{
-		alternateColor = (i % 2 == 0) ? false : true; // Alternate starting color for each row
-		for (int j = 0; j < GameGlobalVar::COLS; j++)
-		{
-			if (alternateColor)
-				DrawRectangle(GameGlobalVar::screenOffsetX + j * GameGlobalVar::CELL_SIZE, GameGlobalVar::screenOffsetY + i * GameGlobalVar::CELL_SIZE, GameGlobalVar::CELL_SIZE, GameGlobalVar::CELL_SIZE, RED);
-			else
-				DrawRectangle(GameGlobalVar::screenOffsetX + j * GameGlobalVar::CELL_SIZE, GameGlobalVar::screenOffsetY + i * GameGlobalVar::CELL_SIZE, GameGlobalVar::CELL_SIZE, GameGlobalVar::CELL_SIZE, BLUE);
-			alternateColor = !alternateColor;
-		}
-	}
-	*/
-	// UI Score, lives
-
-	Font font = GameInst.GetFont();
-
 	DrawText("SCORE:", 300.f, 10.f, 25, WHITE);
 	DrawText(to_string(GameInst.GetScore()).c_str(), 440.f, 10.f, 25, WHITE);
 
@@ -129,6 +114,9 @@ void ScreenGameplayState::DrawScreen(void)
 	}
 	player->Draw();
 
+	if (showDebugGrid)
+		DrawDebug();
+
 	const int uiMargin = 10;
 	const int timeBarWidth = 250;
 	const int timeBarHeight = 20;
@@ -152,6 +140,8 @@ void ScreenGameplayState::DrawScreen(void)
 
 void ScreenGameplayState::UnloadScreen(void)
 {
+	AudioManager::Get().UnloadGameplaySfx();
+
 	delete player;
 	player = nullptr;
 
@@ -175,6 +165,8 @@ int  ScreenGameplayState::FinishScreen(void)
 
 void ScreenGameplayState::EvaluateInput()
 {
+	if (IsKeyPressed(KEY_F1))
+		showDebugGrid = !showDebugGrid;
 
 	if (IsKeyPressed(KEY_ENTER) || IsGestureDetected(GESTURE_TAP))
 	{
@@ -185,13 +177,28 @@ void ScreenGameplayState::EvaluateInput()
 
 void ScreenGameplayState::DebugOptions()
 {
-
 }
 
 void ScreenGameplayState::DrawDebug()
 {
-	GameManager& GameInst = GameManager::GetGameManager();
+	bool alternateColor = false;
+	for (int row = 0; row < GameGlobalVar::ROWS; row++)
+	{
+		alternateColor = (row % 2 != 0);
+		for (int col = 0; col < GameGlobalVar::COLS; col++)
+		{
+			const int x = GameGlobalVar::screenOffsetX + col * GameGlobalVar::CELL_SIZE;
+			const int y = GameGlobalVar::screenOffsetY + row * GameGlobalVar::CELL_SIZE;
+			Color cellColor = alternateColor ? Fade(RED, 0.35f) : Fade(BLUE, 0.35f);
+			DrawRectangle(x, y, GameGlobalVar::CELL_SIZE, GameGlobalVar::CELL_SIZE, cellColor);
 
+			const float cx = x + GameGlobalVar::CELL_SIZE * 0.5f;
+			const float cy = y + GameGlobalVar::CELL_SIZE * 0.5f;
+			DrawCircleV({ cx, cy }, 3.5f, YELLOW);
+
+			alternateColor = !alternateColor;
+		}
+	}
 }
 
 void ScreenGameplayState::ResetTime()
@@ -201,6 +208,7 @@ void ScreenGameplayState::ResetTime()
 
 void ScreenGameplayState::LoseLife()
 {
+	AudioManager::Get().PlaySquash();
 	GameManager& GameInst = GameManager::GetGameManager();
 	GameInst.DecreaseLife();
 	ResetTime();
@@ -241,6 +249,7 @@ void ScreenGameplayState::CheckCollisions()
 		else if (wallState[col] == 1)
 		{
 			wallState[col] = 2; // Mark as reached
+			AudioManager::Get().PlayPlunk();
 			player->ResetPlayerPosition();
 			GameManager::GetGameManager().IncreaseScore(100);
 			ResetTime();

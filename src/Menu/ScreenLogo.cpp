@@ -2,134 +2,88 @@
 #include "raylib.h"
 
 ScreenLogoState::ScreenLogoState()
-	: chargeTime_(0)
 {}
 
 ScreenLogoState& ScreenLogoState::getInstance()
 {
-    static ScreenLogoState singleton;
-    return singleton;
+	static ScreenLogoState singleton;
+	return singleton;
 }
 
-//-------------------------------------------------------------
 void ScreenLogoState::InitScreen(void)
 {
-    framesCounter = 0;
-    lettersCount = 0;
+	finishScreen = 0;
+	state = 0;
+	alpha = 0.0f;
+	stateTimer = 0.0f;
 
-    logoPositionX = GetScreenWidth() / 2 - 128;
-    logoPositionY = GetScreenHeight() / 2 - 128;
-
-    topSideRecWidth = 16;
-    leftSideRecHeight = 16;
-    bottomSideRecWidth = 16;
-    rightSideRecHeight = 16;
-
-    state = 0;
-    alpha = 1.0f;
+	logoTexture = LoadTexture("resources/Menu/robot.png");
+	logoLoaded = true;
 }
 
-//-------------------------------------------------------------
 void ScreenLogoState::UpdateScreen(float deltaTime)
 {
-    if (state == 0)                 // State 0: Top-left square corner blink logic
-    {
-        framesCounter++;
+	stateTimer += deltaTime;
 
-        if (framesCounter == 80)
-        {
-            state = 1;
-            framesCounter = 0;      // Reset counter... will be used later...
-        }
-    }
-    else if (state == 1)            // State 1: Bars animation logic: top and left
-    {
-        topSideRecWidth += 8;
-        leftSideRecHeight += 8;
-
-        if (topSideRecWidth == 256) state = 2;
-    }
-    else if (state == 2)            // State 2: Bars animation logic: bottom and right
-    {
-        bottomSideRecWidth += 8;
-        rightSideRecHeight += 8;
-
-        if (bottomSideRecWidth == 256) state = 3;
-    }
-    else if (state == 3)            // State 3: "raylib" text-write animation logic
-    {
-        framesCounter++;
-
-        if (lettersCount < 10)
-        {
-            if (framesCounter / 12)   // Every 12 frames, one more letter!
-            {
-                lettersCount++;
-                framesCounter = 0;
-            }
-        }
-        else    // When all letters have appeared, just fade out everything
-        {
-            if (framesCounter > 200)
-            {
-                alpha -= 0.02f;
-
-                if (alpha <= 0.0f)
-                {
-                    alpha = 0.0f;
-                    finishScreen = 1;   // Jump to next screen
-                }
-            }
-        }
-    }
+	if (state == 0)
+	{
+		alpha = stateTimer / kFadeInDuration;
+		if (alpha >= 1.0f)
+		{
+			alpha = 1.0f;
+			state = 1;
+			stateTimer = 0.0f;
+		}
+	}
+	else if (state == 1)
+	{
+		alpha = 1.0f;
+		if (stateTimer >= kHoldDuration)
+		{
+			state = 2;
+			stateTimer = 0.0f;
+		}
+	}
+	else if (state == 2)
+	{
+		alpha = 1.0f - (stateTimer / kFadeOutDuration);
+		if (alpha <= 0.0f)
+		{
+			alpha = 0.0f;
+			finishScreen = 1;
+		}
+	}
 }
 
-//-------------------------------------------------------------
 void ScreenLogoState::DrawScreen(void)
 {
-    DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLACK);
+	DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), BLACK);
 
-    if (state == 0)         // Draw blinking top-left square corner
-    {
-        if ((framesCounter / 10) % 2) DrawRectangle(logoPositionX, logoPositionY, 16, 16, PURPLE);
-    }
-    else if (state == 1)    // Draw bars animation: top and left
-    {
-        DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, PURPLE);
-        DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, PURPLE);
-    }
-    else if (state == 2)    // Draw bars animation: bottom and right
-    {
-        DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, PURPLE);
-        DrawRectangle(logoPositionX, logoPositionY, 16, leftSideRecHeight, PURPLE);
+	if (!logoLoaded)
+		return;
 
-        DrawRectangle(logoPositionX + 240, logoPositionY, 16, rightSideRecHeight, PURPLE);
-        DrawRectangle(logoPositionX, logoPositionY + 240, bottomSideRecWidth, 16, PURPLE);
-    }
-    else if (state == 3)    // Draw "raylib" text-write animation + "powered by"
-    {
-        DrawRectangle(logoPositionX, logoPositionY, topSideRecWidth, 16, Fade(PURPLE, alpha));
-        DrawRectangle(logoPositionX, logoPositionY + 16, 16, leftSideRecHeight - 32, Fade(PURPLE, alpha));
+	const int robotX = (GetScreenWidth() - logoTexture.width) / 2;
+	const int robotY = (GetScreenHeight() - logoTexture.height) / 2;
 
-        DrawRectangle(logoPositionX + 240, logoPositionY + 16, 16, rightSideRecHeight - 32, Fade(PURPLE, alpha));
-        DrawRectangle(logoPositionX, logoPositionY + 240, bottomSideRecWidth, 16, Fade(PURPLE, alpha));
+	const char* madeBy = "made by";
+	const int madeBySize = 20;
+	const int madeByX = (GetScreenWidth() - MeasureText(madeBy, madeBySize)) / 2;
+	const int madeByY = robotY - 27;
 
-        DrawRectangle(GetScreenWidth() / 2 - 112, GetScreenHeight() / 2 - 112, 224, 224, Fade(BLACK, alpha));
-
-        DrawText(TextSubtext("alvar", 0, lettersCount), GetScreenWidth() / 2 - 44, GetScreenHeight() / 2 + 48, 50, Fade(PURPLE, alpha));
-
-        if (framesCounter > 20) DrawText("made by", logoPositionX, logoPositionY - 27, 20, Fade(PURPLE, alpha));
-    }
+	DrawText(madeBy, madeByX, madeByY, madeBySize, Fade(PURPLE, alpha));
+	DrawTexture(logoTexture, robotX, robotY, Fade(WHITE, alpha));
 }
 
-//-------------------------------------------------------------
 void ScreenLogoState::UnloadScreen(void)
 {
-
+	if (logoLoaded)
+	{
+		UnloadTexture(logoTexture);
+		logoLoaded = false;
+	}
 }
 
-//-------------------------------------------------------------
-int  ScreenLogoState::FinishScreen(void)
+int ScreenLogoState::FinishScreen(void)
 {
-    return finishScreen;
+	return finishScreen;
 }

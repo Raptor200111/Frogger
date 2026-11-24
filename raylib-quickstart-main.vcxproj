@@ -303,6 +303,7 @@
   <ItemGroup>
     <ClInclude Include="src\Game\GlobalGameDefines.h" />
     <ClInclude Include="src\Game\Lane.h" />
+    <ClInclude Include="src\Game\Managers\AudioManager.h" />
     <ClInclude Include="src\Game\Managers\GameManager.h" />
     <ClInclude Include="src\Game\Player.h" />
     <ClInclude Include="src\Game\resource_dir.h" />
@@ -333,6 +334,7 @@
     <ClCompile Include="src\Frogger.cpp" />
     <ClCompile Include="src\Game\GlobalGameDefines.cpp" />
     <ClCompile Include="src\Game\Lane.cpp" />
+    <ClCompile Include="src\Game\Managers\AudioManager.cpp" />
     <ClCompile Include="src\Game\Managers\GameManager.cpp" />
     <ClCompile Include="src\Game\Player.cpp" />
     <ClCompile Include="src\Game\Sprite.cpp" />
